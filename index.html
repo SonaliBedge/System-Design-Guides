@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>System Design Learning - Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.2);
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .nav-btn.prev {
+            background: #9CA3AF;
+            color: white;
+        }
+
+        .nav-btn.next {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #slideCounter {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .slide {
+            display: none;
+            padding: 20px 15px;
+            min-height: 400px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide h2 {
+            color: #667eea;
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .slide h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+
+        .slide h4 {
+            color: #555;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .content-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .content-section p {
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .key-point {
+            background: #e8f4f8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .example-box {
+            background: #fff3e0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .tip-box {
+            background: #fff9c4;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #fbc02d;
+            margin: 15px 0;
+        }
+
+        .tip-box::before {
+            content: "💡 Pro Tip: ";
+            font-weight: 600;
+            color: #f57f17;
+        }
+
+        .quiz-container {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .quiz-question {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            line-height: 1.5;
+            touch-action: manipulation;
+        }
+
+        .quiz-option:active {
+            transform: scale(0.98);
+        }
+
+        .quiz-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quiz-option.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .quiz-option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .check-btn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .check-btn:active {
+            transform: scale(0.98);
+            background: #5568d3;
+        }
+
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+            line-height: 1.6;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+        }
+
+        .quiz-feedback.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .quiz-feedback.incorrect {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .diagram {
+            background: white;
+            padding: 20px 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .diagram-box {
+            display: inline-block;
+            padding: 12px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            margin: 8px 5px;
+            background: #f0f4ff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .arrow {
+            display: inline-block;
+            margin: 0 8px;
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+            font-size: 13px;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #667eea;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .matching-game {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .match-column h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .match-item {
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .match-item:active {
+            transform: scale(0.98);
+        }
+
+        .match-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .match-item.matched {
+            background: #4CAF50;
+            color: white;
+            cursor: default;
+        }
+
+        #matchResult {
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .interactive-activity {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .activity-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 12px;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .slide h2 {
+                font-size: 1.4em;
+            }
+            
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .diagram-box {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 System Design Mastery</h1>
+            <p>Interactive Learning for Interview Success</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn prev" id="prevBtn">← Previous</button>
+            <span id="slideCounter">Slide 1 of 20</span>
+            <button class="nav-btn next" id="nextBtn">Next →</button>
+        </div>
+
+        <!-- Slide 1: Introduction -->
+        <div class="slide active" data-slide="0">
+            <h2>Welcome to System Design!</h2>
+            <div class="content-section">
+                <p style="font-size: 1.1em; line-height: 1.8;">
+                    System design is the process of defining the architecture, components, modules, interfaces, 
+                    and data for a system to satisfy specified requirements. It's a crucial skill for software 
+                    engineers working on large-scale applications.
+                </p>
+            </div>
+
+            <h3>What You'll Learn:</h3>
+            <div class="content-section">
+                <ul>
+                    <li>Core system design principles and processes</li>
+                    <li>Different architectural patterns</li>
+                    <li>Performance concepts (latency, throughput)</li>
+                    <li>Distributed systems fundamentals</li>
+                    <li>Scalability strategies</li>
+                    <li>And much more!</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Take your time with each concept. Try all the quizzes and activities to reinforce your learning!
+            </div>
+        </div>
+
+        <!-- Slide 2: System Design Process -->
+        <div class="slide" data-slide="1">
+            <h2>1. The System Design Process</h2>
+            
+            <div class="content-section">
+                <h3>Step-by-Step Approach:</h3>
+                <div class="diagram">
+                    <div class="diagram-box">Requirements</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">Constraints</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">Design</div>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>1. Understand Requirements</strong>
+                <ul>
+                    <li><strong>Functional:</strong> What should the system do?</li>
+                    <li><strong>Non-Functional:</strong> How should it perform?</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>2. Define Constraints & Scale</strong>
+                <ul>
+                    <li>How many users?</li>
+                    <li>Read vs Write ratio</li>
+                    <li>Data volume and growth</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>3. High-Level Design</strong>
+                <ul>
+                    <li>Draw major components</li>
+                    <li>Show data flow</li>
+                    <li>Identify key services</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>4. Deep Dive</strong>
+                <ul>
+                    <li>Database schema</li>
+                    <li>API design</li>
+                    <li>Algorithm choices</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>5. Discuss Trade-offs</strong>
+                <ul>
+                    <li>Consistency vs Availability</li>
+                    <li>Latency vs Throughput</li>
+                    <li>Cost vs Performance</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Always clarify requirements before jumping into design. It shows structured thinking!
+            </div>
+        </div>
+
+        <!-- Slide 3: Quiz on System Design Process -->
+        <div class="slide" data-slide="2">
+            <h2>Quiz: System Design Process</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question">1. What should you do FIRST in a system design interview?</div>
+                <div class="quiz-options" data-question="0">
+                    <div class="quiz-option" data-answer="A">A) Start drawing the architecture diagram</div>
+                    <div class="quiz-option" data-answer="B">B) Clarify functional and non-functional requirements</div>
+                    <div class="quiz-option" data-answer="C">C) Choose the database technology</div>
+                    <div class="quiz-option" data-answer="D">D) Discuss scalability strategies</div>
+                </div>
+                <button class="check-btn" data-question="0" data-correct="B">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-0"></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question">2. Which of these is a NON-functional requirement?</div>
+                <div class="quiz-options" data-question="1">
+                    <div class="quiz-option" data-answer="A">A) Users can upload photos</div>
+                    <div class="quiz-option" data-answer="B">B) Users can search for friends</div>
+                    <div class="quiz-option" data-answer="C">C) System should handle 10,000 requests per second</div>
+                    <div class="quiz-option" data-answer="D">D) Users can create posts</div>
+                </div>
+                <button class="check-btn" data-question="1" data-correct="C">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-1"></div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Monolithic Architecture -->
+        <div class="slide" data-slide="3">
+            <h2>2. Monolithic Architecture</h2>
+            
+            <div class="content-section">
+                <h3>What is it?</h3>
+                <p>
+                    A monolithic application is built as a single, unified unit. All components are 
+                    interconnected and run as one service.
+                </p>
+            </div>
+
+            <div class="diagram">
+                <div style="border: 3px solid #667eea; padding: 20px; border-radius: 10px; background: #f0f4ff;">
+                    <strong>Monolithic App</strong><br><br>
+                    <div style="border: 2px solid #764ba2; padding: 8px; margin: 5px; background: white;">UI</div>
+                    <div style="border: 2px solid #764ba2; padding: 8px; margin: 5px; background: white;">Business Logic</div>
+                    <div style="border: 2px solid #764ba2; padding: 8px; margin: 5px; background: white;">Data Layer</div>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>Advantages:</strong>
+                <ul>
+                    <li>Simple to develop and deploy</li>
+                    <li>Easy to test</li>
+                    <li>Low latency between components</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <strong>Disadvantages:</strong>
+                <ul>
+                    <li>Tight coupling</li>
+                    <li>Hard to scale specific parts</li>
+                    <li>Single point of failure</li>
+                    <li>Technology lock-in</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Monolithic is great for small apps or MVPs. Don't over-engineer early!
+            </div>
+        </div>
+
+        <!-- Slide 5: Microservices Architecture -->
+        <div class="slide" data-slide="4">
+            <h2>2. Microservices Architecture</h2>
+            
+            <div class="content-section">
+                <h3>What are Microservices?</h3>
+                <p>
+                    Break down an application into small, independent services. 
+                    Each handles a specific capability.
+                </p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">User Service</div>
+                <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">Order Service</div>
+                <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">Payment Service</div>
+            </div>
+
+            <div class="key-point">
+                <strong>Advantages:</strong>
+                <ul>
+                    <li>Independent scaling</li>
+                    <li>Technology flexibility</li>
+                    <li>Fault isolation</li>
+                    <li>Better team organization</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <strong>Disadvantages:</strong>
+                <ul>
+                    <li>Complex deployment</li>
+                    <li>Network latency</li>
+                    <li>Data consistency challenges</li>
+                    <li>Requires DevOps expertise</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Use microservices for large teams, independent scaling needs, or technology flexibility.
+            </div>
+        </div>
+
+        <!-- Slide 6: Architecture Matching Activity -->
+        <div class="slide" data-slide="5">
+            <h2>Activity: Match Scenarios</h2>
+            
+            <div class="interactive-activity">
+                <div class="activity-title">🎯 Match each scenario to the best architecture</div>
+                <p>Tap items to select, then tap the architecture to match:</p>
+                
+                <div class="matching-game">
+                    <div class="match-column">
+                        <h4>Scenarios:</h4>
+                        <div class="match-item" data-type="scenario" data-id="1" data-correct="mono">
+                            Small startup building an MVP
+                        </div>
+                        <div class="match-item" data-type="scenario" data-id="2" data-correct="micro">
+                            Large e-commerce with 1M+ users
+                        </div>
+                        <div class="match-item" data-type="scenario" data-id="3" data-correct="micro">
+                            Need independent payment scaling
+                        </div>
+                        <div class="match-item" data-type="scenario" data-id="4" data-correct="mono">
+                            Simple blog application
+                        </div>
+                    </div>
+                    
+                    <div class="match-column">
+                        <h4>Architecture:</h4>
+                        <div class="match-item" data-type="arch" data-id="mono">
+                            Monolithic
+                        </div>
+                        <div class="match-item" data-type="arch" data-id="micro">
+                            Microservices
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="matchResult"></div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Latency and Throughput -->
+        <div class="slide" data-slide="6">
+            <h2>3. Latency and Throughput</h2>
+            
+            <div class="content-section">
+                <h3>Latency</h3>
+                <p>
+                    Time for a single operation to complete (measured in ms, seconds).
+                </p>
+                <div class="example-box">
+                    <strong>Example:</strong> Button click takes 200ms to respond = 200ms latency
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h3>Throughput</h3>
+                <p>
+                    Number of operations per time period (ops/sec, requests/sec).
+                </p>
+                <div class="example-box">
+                    <strong>Example:</strong> API handles 10,000 requests/second = throughput
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Latency</th>
+                        <th>Throughput</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Focus</strong></td>
+                        <td>Speed per operation</td>
+                        <td>System capacity</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Units</strong></td>
+                        <td>Time (ms)</td>
+                        <td>Ops/time</td>
+                    </tr>
+                    <tr>
+                        <td><strong>User Impact</strong></td>
+                        <td>How fast</td>
+                        <td>How many users</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tip-box">
+                Clarify whether the focus is latency (real-time apps) or throughput (batch processing).
+            </div>
+        </div>
+
+        <!-- Slide 8: Performance Quiz -->
+        <div class="slide" data-slide="7">
+            <h2>Quiz: Latency & Throughput</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question">1. Video streaming needs users to start watching within 2 seconds. This is a requirement for:</div>
+                <div class="quiz-options" data-question="2">
+                    <div class="quiz-option" data-answer="A">A) Low latency</div>
+                    <div class="quiz-option" data-answer="B">B) High throughput</div>
+                    <div class="quiz-option" data-answer="C">C) Both equally</div>
+                    <div class="quiz-option" data-answer="D">D) Neither</div>
+                </div>
+                <button class="check-btn" data-question="2" data-correct="A">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-2"></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question">2. Email service needs to process 1 million emails per hour. This is primarily:</div>
+                <div class="quiz-options" data-question="3">
+                    <div class="quiz-option" data-answer="A">A) Low latency</div>
+                    <div class="quiz-option" data-answer="B">B) High throughput</div>
+                    <div class="quiz-option" data-answer="C">C) Low throughput</div>
+                    <div class="quiz-option" data-answer="D">D) High latency</div>
+                </div>
+                <button class="check-btn" data-question="3" data-correct="B">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-3"></div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Availability -->
+        <div class="slide" data-slide="8">
+            <h2>4. Availability</h2>
+            
+            <div class="content-section">
+                <h3>What is Availability?</h3>
+                <p>
+                    Percentage of time a system is operational. Expressed in "nines" (99%, 99.9%, etc.).
+                </p>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Availability</th>
+                        <th>Nines</th>
+                        <th>Downtime/Year</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>99%</td>
+                        <td>Two nines</td>
+                        <td>3.65 days</td>
+                    </tr>
+                    <tr>
+                        <td>99.9%</td>
+                        <td>Three nines</td>
+                        <td>8.77 hours</td>
+                    </tr>
+                    <tr>
+                        <td>99.99%</td>
+                        <td>Four nines</td>
+                        <td>52.60 minutes</td>
+                    </tr>
+                    <tr>
+                        <td>99.999%</td>
+                        <td>Five nines</td>
+                        <td>5.26 minutes</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="key-point">
+                <strong>How to Achieve:</strong>
+                <ul>
+                    <li>Redundancy (multiple instances)</li>
+                    <li>Load balancing</li>
+                    <li>Failover mechanisms</li>
+                    <li>Health monitoring</li>
+                    <li>Geographic distribution</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Higher availability = higher cost. Balance business needs with infrastructure costs!
+            </div>
+        </div>
+
+        <!-- Slide 10: Consistency -->
+        <div class="slide" data-slide="9">
+            <h2>4. Consistency</h2>
+            
+            <div class="content-section">
+                <h3>What is Consistency?</h3>
+                <p>
+                    All nodes in a distributed system see the same data at the same time.
+                </p>
+            </div>
+
+            <div class="key-point">
+                <strong>Strong Consistency</strong>
+                <p>After a write, all reads return that value immediately.</p>
+                <div class="example-box">
+                    <strong>Example:</strong> Banking transactions
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>Eventual Consistency</strong>
+                <p>Reads may return old values temporarily, but eventually converge.</p>
+                <div class="example-box">
+                    <strong>Example:</strong> Social media feeds
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>Weak Consistency</strong>
+                <p>No guarantees about when reads return recent writes.</p>
+                <div class="example-box">
+                    <strong>Example:</strong> Live video streaming
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: CAP Theorem -->
+        <div class="slide" data-slide="10">
+            <h2>5. CAP Theorem</h2>
+            
+            <div class="content-section">
+                <h3>The CAP Triangle</h3>
+                <p>
+                    A distributed system can guarantee only TWO of three properties:
+                </p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box" style="background: #e3f2fd; border-color: #2196F3;">
+                    CONSISTENCY<br><small>Same data everywhere</small>
+                </div>
+                <br>
+                <div class="diagram-box" style="background: #f3e5f5; border-color: #9C27B0;">
+                    AVAILABILITY<br><small>Always responds</small>
+                </div>
+                <br>
+                <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">
+                    PARTITION TOLERANCE<br><small>Works despite failures</small>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>CP (Consistency + Partition)</strong>
+                <p>Ensures consistency, may become unavailable</p>
+                <div class="example-box">
+                    <strong>Examples:</strong> MongoDB, HBase<br>
+                    <strong>Use:</strong> Banking, inventory
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>AP (Availability + Partition)</strong>
+                <p>Always available, may return stale data</p>
+                <div class="example-box">
+                    <strong>Examples:</strong> Cassandra, DynamoDB<br>
+                    <strong>Use:</strong> Social feeds, catalogs
+                </div>
+            </div>
+
+            <div class="tip-box">
+                In distributed systems, you MUST have Partition Tolerance. Choose between C and A!
+            </div>
+        </div>
+
+        <!-- Slide 12: CAP Quiz -->
+        <div class="slide" data-slide="11">
+            <h2>Quiz: CAP Theorem</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question">1. Banking app needs accurate balances, even if some transactions fail during network issues. Which CAP?</div>
+                <div class="quiz-options" data-question="4">
+                    <div class="quiz-option" data-answer="A">A) AP</div>
+                    <div class="quiz-option" data-answer="B">B) CP</div>
+                    <div class="quiz-option" data-answer="C">C) CA</div>
+                    <div class="quiz-option" data-answer="D">D) All three</div>
+                </div>
+                <button class="check-btn" data-question="4" data-correct="B">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-4"></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question">2. Social media feed should always be accessible, even if some posts appear out of order. Which CAP?</div>
+                <div class="quiz-options" data-question="5">
+                    <div class="quiz-option" data-answer="A">A) AP</div>
+                    <div class="quiz-option" data-answer="B">B) CP</div>
+                    <div class="quiz-option" data-answer="C">C) CA</div>
+                    <div class="quiz-option" data-answer="D">D) None</div>
+                </div>
+                <button class="check-btn" data-question="5" data-correct="A">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-5"></div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Lamport Clocks -->
+        <div class="slide" data-slide="12">
+            <h2>6. Lamport Logical Clocks</h2>
+            
+            <div class="content-section">
+                <h3>The Problem</h3>
+                <p>
+                    Different servers don't share a clock. How do we order events?
+                </p>
+                <div class="example-box">
+                    Server A sends at "2:00 PM"<br>
+                    Server B receives at "1:59 PM" (clock skew)<br>
+                    Did message arrive before it was sent? 🤔
+                </div>
+            </div>
+
+            <div class="key-point">
+                <strong>Lamport's Solution</strong>
+                <p>Use a counter instead of physical time</p>
+                <ol>
+                    <li>Each process has a counter (starts at 0)</li>
+                    <li>Increment before each event</li>
+                    <li>Include counter when sending messages</li>
+                    <li>On receive: counter = max(yours, received) + 1</li>
+                </ol>
+            </div>
+
+            <div class="example-box">
+                <strong>Use Cases:</strong>
+                <ul>
+                    <li>Database transaction ordering</li>
+                    <li>Distributed version control (Git)</li>
+                    <li>Conflict resolution</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Lamport clocks show causality: if A happened before B, then A's timestamp < B's timestamp.
+            </div>
+        </div>
+
+        <!-- Slide 14: Scaling -->
+        <div class="slide" data-slide="13">
+            <h2>7. Vertical vs Horizontal Scaling</h2>
+            
+            <div class="content-section">
+                <h3>Vertical Scaling (Scale Up)</h3>
+                <p>Add more power to existing machine</p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box" style="background: #e3f2fd; border-color: #2196F3;">
+                    Before<br>4 CPU, 8GB
+                </div>
+                <span class="arrow">→</span>
+                <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">
+                    After<br>16 CPU, 64GB
+                </div>
+            </div>
+
+            <div class="key-point">
+                ✅ Simple, no code changes<br>
+                ✅ Consistent data<br>
+                ❌ Hardware limits<br>
+                ❌ Single point of failure
+            </div>
+
+            <div class="content-section">
+                <h3>Horizontal Scaling (Scale Out)</h3>
+                <p>Add more machines</p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box">Server 1</div>
+                <span class="arrow">→</span>
+                <div>
+                    <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">S1</div>
+                    <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">S2</div>
+                    <div class="diagram-box" style="background: #e8f5e9; border-color: #4CAF50;">S3</div>
+                </div>
+            </div>
+
+            <div class="key-point">
+                ✅ Infinite scalability<br>
+                ✅ Fault tolerance<br>
+                ❌ Complex architecture<br>
+                ❌ Data consistency challenges
+            </div>
+
+            <div class="tip-box">
+                Start vertical, switch to horizontal when you hit limits or need redundancy.
+            </div>
+        </div>
+
+        <!-- Slide 15: Scalability -->
+        <div class="slide" data-slide="14">
+            <h2>8. Scalability</h2>
+            
+            <div class="content-section">
+                <h3>What is Scalability?</h3>
+                <p>
+                    Ability to handle increased load by adding resources while maintaining performance.
+                </p>
+            </div>
+
+            <div class="key-point">
+                <strong>Types:</strong>
+                <ul>
+                    <li><strong>Load:</strong> More requests/users</li>
+                    <li><strong>Data:</strong> Larger datasets</li>
+                    <li><strong>Geographic:</strong> Multiple regions</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>Key Patterns:</strong>
+                
+                <h4>1. Stateless Services</h4>
+                <p>Any server can handle any request</p>
+                
+                <h4>2. Database Sharding</h4>
+                <p>Split data across servers</p>
+                
+                <h4>3. Async Processing</h4>
+                <p>Use message queues for heavy tasks</p>
+                
+                <h4>4. Caching</h4>
+                <p>Store frequent data in fast storage</p>
+            </div>
+
+            <div class="tip-box">
+                Design for scalability early! Retrofitting is much harder.
+            </div>
+        </div>
+
+        <!-- Slide 16: Caching -->
+        <div class="slide" data-slide="15">
+            <h2>9. Caching</h2>
+            
+            <div class="content-section">
+                <h3>What is Caching?</h3>
+                <p>
+                    Store frequently accessed data in fast storage (memory) to reduce database load and latency.
+                </p>
+            </div>
+
+            <div class="key-point">
+                <strong>Cache Eviction Policies:</strong>
+                
+                <h4>1. LRU (Least Recently Used)</h4>
+                <p>Evict items not accessed for longest time</p>
+                <div class="example-box">
+                    <strong>Best for:</strong> General caching, most popular
+                </div>
+
+                <h4>2. LFU (Least Frequently Used)</h4>
+                <p>Evict items accessed least often</p>
+                <div class="example-box">
+                    <strong>Best for:</strong> When frequency matters
+                </div>
+
+                <h4>3. FIFO (First In, First Out)</h4>
+                <p>Evict oldest items first</p>
+                <div class="example-box">
+                    <strong>Best for:</strong> Simple scenarios, streaming
+                </div>
+
+                <h4>4. TTL (Time To Live)</h4>
+                <p>Items expire after set time</p>
+                <div class="example-box">
+                    <strong>Best for:</strong> Data with known staleness
+                </div>
+            </div>
+
+            <div class="tip-box">
+                Cache invalidation is one of the hardest problems in computer science! 😄
+            </div>
+        </div>
+
+        <!-- Slide 17: Message Queues -->
+        <div class="slide" data-slide="16">
+            <h2>10. Message Queues</h2>
+            
+            <div class="content-section">
+                <h3>What are Message Queues?</h3>
+                <p>
+                    Asynchronous communication where messages are stored until processed.
+                </p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box">Producer</div>
+                <span class="arrow">→</span>
+                <div class="diagram-box" style="background: #fff3e0; border-color: #ff9800;">Queue</div>
+                <span class="arrow">→</span>
+                <div class="diagram-box">Consumer</div>
+            </div>
+
+            <div class="key-point">
+                <strong>Why Use Them?</strong>
+                <ul>
+                    <li>Decoupling services</li>
+                    <li>Async processing</li>
+                    <li>Handle traffic spikes</li>
+                    <li>Reliability</li>
+                    <li>Scalability</li>
+                </ul>
+            </div>
+
+            <div class="example-box">
+                <strong>Examples:</strong>
+                <ul>
+                    <li>Order processing</li>
+                    <li>Email notifications</li>
+                    <li>Video encoding</li>
+                    <li>Log processing</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Use queues for async tasks. Don't use for real-time request-response!
+            </div>
+        </div>
+
+        <!-- Slide 18: Redundancy & Replication -->
+        <div class="slide" data-slide="17">
+            <h2>11. Redundancy & Replication</h2>
+            
+            <div class="content-section">
+                <h3>Redundancy</h3>
+                <p>
+                    Duplicate critical components for reliability. If one fails, another takes over.
+                </p>
+            </div>
+
+            <div class="content-section">
+                <h3>Replication</h3>
+                <p>
+                    Copy data across multiple databases. Provides redundancy AND improves reads.
+                </p>
+            </div>
+
+            <div class="key-point">
+                <strong>Master-Slave</strong>
+                <ul>
+                    <li>All writes → master</li>
+                    <li>Reads → any slave</li>
+                    <li>✅ Simple, scales reads</li>
+                    <li>❌ Single write point</li>
+                </ul>
+            </div>
+
+            <div class="key-point">
+                <strong>Master-Master</strong>
+                <ul>
+                    <li>Multiple nodes accept writes</li>
+                    <li>Nodes sync with each other</li>
+                    <li>✅ No single point of failure</li>
+                    <li>❌ Conflict resolution needed</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                Redundancy prevents failures. Replication improves reliability AND performance!
+            </div>
+        </div>
+
+        <!-- Slide 19: Load Balancing -->
+        <div class="slide" data-slide="18">
+            <h2>12. Load Balancing</h2>
+            
+            <div class="content-section">
+                <h3>What is it?</h3>
+                <p>
+                    Distributes traffic across multiple servers so no single server is overwhelmed.
+                </p>
+            </div>
+
+            <div class="diagram">
+                <div class="diagram-box" style="background: #fff3e0; border-color: #ff9800;">Load Balancer</div>
+                <br><span class="arrow" style="transform: rotate(90deg);">→</span><br>
+                <div class="diagram-box">S1</div>
+                <div class="diagram-box">S2</div>
+                <div class="diagram-box">S3</div>
+            </div>
+
+            <div class="key-point">
+                <strong>Algorithms:</strong>
+                
+                <h4>1. Round Robin</h4>
+                <p>Rotate through servers sequentially</p>
+                
+                <h4>2. Least Connections</h4>
+                <p>Send to server with fewest connections</p>
+                
+                <h4>3. Weighted Round Robin</h4>
+                <p>More powerful servers get more requests</p>
+                
+                <h4>4. IP Hash</h4>
+                <p>Same client → same server (session persistence)</p>
+            </div>
+
+            <div class="tip-box">
+                Load balancers are crucial for horizontal scaling!
+            </div>
+        </div>
+
+        <!-- Slide 20: Final Quiz -->
+        <div class="slide" data-slide="19">
+            <h2>🎓 Final Quiz</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question">1. URL shortener: Which caching policy for popular URLs?</div>
+                <div class="quiz-options" data-question="6">
+                    <div class="quiz-option" data-answer="A">A) FIFO</div>
+                    <div class="quiz-option" data-answer="B">B) LFU</div>
+                    <div class="quiz-option" data-answer="C">C) Random</div>
+                    <div class="quiz-option" data-answer="D">D) TTL only</div>
+                </div>
+                <button class="check-btn" data-question="6" data-correct="B">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-6"></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question">2. App has 1000 req/sec, spikes to 10,000. Best approach?</div>
+                <div class="quiz-options" data-question="7">
+                    <div class="quiz-option" data-answer="A">A) Vertical scaling only</div>
+                    <div class="quiz-option" data-answer="B">B) Message queues only</div>
+                    <div class="quiz-option" data-answer="C">C) Horizontal + Load balancer + Queues</div>
+                    <div class="quiz-option" data-answer="D">D) Just caching</div>
+                </div>
+                <button class="check-btn" data-question="7" data-correct="C">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-7"></div>
+            </div>
+
+            <div class="quiz-container">
+                <div class="quiz-question">3. Which scenario does NOT need a message queue?</div>
+                <div class="quiz-options" data-question="8">
+                    <div class="quiz-option" data-answer="A">A) Sending 10,000 emails</div>
+                    <div class="quiz-option" data-answer="B">B) Processing videos</div>
+                    <div class="quiz-option" data-answer="C">C) Generating monthly reports</div>
+                    <div class="quiz-option" data-answer="D">D) User login authentication</div>
+                </div>
+                <button class="check-btn" data-question="8" data-correct="D">Check Answer</button>
+                <div class="quiz-feedback" id="feedback-8"></div>
+            </div>
+
+            <div class="content-section" style="margin-top: 30px;">
+                <h3>🎉 Congratulations!</h3>
+                <p>You've completed System Design! Quick recap:</p>
+                <ul>
+                    <li>✅ Design Process & Architectures</li>
+                    <li>✅ Performance (Latency, Throughput)</li>
+                    <li>✅ CAP & Distributed Systems</li>
+                    <li>✅ Scaling Strategies</li>
+                    <li>✅ Caching, Queues, Load Balancers</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                For interviews: Clarify requirements, start high-level, discuss trade-offs, dive deep!
+            </div>
+
+            <div id="finalScore" class="score-display"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // App state
+        let currentSlide = 0;
+        const totalSlides = 20;
+        let selectedAnswers = {};
+        let score = 0;
+        let matchingGame = {
+            selected: null,
+            matches: new Set()
+        };
+
+        // Quiz explanations
+        const explanations = {
+            0: { B: "Correct! Always clarify requirements first." },
+            1: { C: "Correct! Performance metrics are non-functional requirements." },
+            2: { A: "Correct! Quick response time is a latency requirement." },
+            3: { B: "Correct! Processing large volume is a throughput requirement." },
+            4: { B: "Correct! Banking requires consistency to prevent double-spending." },
+            5: { A: "Correct! Social media prioritizes availability over perfect consistency." },
+            6: { B: "Correct! LFU keeps frequently accessed URLs cached." },
+            7: { C: "Correct! Horizontal scaling + load balancer + queues handle spikes best." },
+            8: { D: "Correct! Login needs immediate response, not async processing." }
+        };
+
+        // Initialize
+        function init() {
+            updateProgress();
+            setupEventListeners();
+            updateButtonStates();
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Navigation buttons
+            document.getElementById('prevBtn').addEventListener('click', () => changeSlide(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => changeSlide(1));
+
+            // Quiz options
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const question = this.closest('.quiz-options').dataset.question;
+                    selectOption(this, question);
+                });
+            });
+
+            // Check answer buttons
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const question = this.dataset.question;
+                    const correct = this.dataset.correct;
+                    checkAnswer(question, correct);
+                });
+            });
+
+            // Matching game
+            document.querySelectorAll('.match-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    handleMatchClick(this);
+                });
+            });
+        }
+
+        // Change slide
+        function changeSlide(direction) {
+            const slides = document.querySelectorAll('.slide');
+            slides[currentSlide].classList.remove('active');
+            
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            
+            slides[currentSlide].classList.add('active');
+            updateProgress();
+            updateButtonStates();
+            window.scrollTo(0, 0);
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('slideCounter').textContent = `Slide ${currentSlide + 1} of ${totalSlides}`;
+        }
+
+        // Update button states
+        function updateButtonStates() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        // Select quiz option
+        function selectOption(element, questionId) {
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedAnswers[questionId] = element.dataset.answer;
+        }
+
+        // Check answer
+        function checkAnswer(questionId, correctAnswer) {
+            const feedback = document.getElementById(`feedback-${questionId}`);
+            const userAnswer = selectedAnswers[questionId];
+            
+            if (!userAnswer) {
+                feedback.textContent = 'Please select an answer first!';
+                feedback.className = 'quiz-feedback show incorrect';
+                return;
+            }
+            
+            const optionsContainer = feedback.previousElementSibling.previousElementSibling;
+            const options = optionsContainer.querySelectorAll('.quiz-option');
+            
+            if (userAnswer === correctAnswer) {
+                feedback.textContent = '✅ ' + (explanations[questionId][correctAnswer] || 'Correct!');
+                feedback.className = 'quiz-feedback show correct';
+                score++;
+                
+                options.forEach(opt => {
+                    if (opt.dataset.answer === correctAnswer) {
+                        opt.classList.add('correct');
+                    }
+                });
+            } else {
+                const correctExplanation = explanations[questionId][correctAnswer] || 'Try again!';
+                feedback.textContent = '❌ ' + correctExplanation;
+                feedback.className = 'quiz-feedback show incorrect';
+                
+                options.forEach(opt => {
+                    if (opt.dataset.answer === userAnswer) {
+                        opt.classList.add('incorrect');
+                    }
+                    if (opt.dataset.answer === correctAnswer) {
+                        opt.classList.add('correct');
+                    }
+                });
+            }
+            
+            if (currentSlide === totalSlides - 1) {
+                updateFinalScore();
+            }
+        }
+
+        // Handle matching game
+        function handleMatchClick(element) {
+            if (element.classList.contains('matched')) return;
+            
+            const type = element.dataset.type;
+            const id = element.dataset.id;
+            
+            if (!matchingGame.selected) {
+                element.classList.add('selected');
+                matchingGame.selected = element;
+            } else {
+                const first = matchingGame.selected;
+                
+                if (first === element) {
+                    first.classList.remove('selected');
+                    matchingGame.selected = null;
+                    return;
+                }
+                
+                // Check if it's a scenario-architecture pair
+                let isCorrect = false;
+                if (first.dataset.type === 'scenario' && type === 'arch') {
+                    isCorrect = first.dataset.correct === id;
+                } else if (type === 'scenario' && first.dataset.type === 'arch') {
+                    isCorrect = element.dataset.correct === first.dataset.id;
+                }
+                
+                const result = document.getElementById('matchResult');
+                
+                if (isCorrect) {
+                    first.classList.remove('selected');
+                    first.classList.add('matched');
+                    element.classList.add('matched');
+                    matchingGame.matches.add(first.dataset.id || id);
+                    
+                    result.textContent = '✅ Correct match!';
+                    result.style.background = '#c8e6c9';
+                    result.style.color = '#2e7d32';
+                    
+                    if (matchingGame.matches.size === 4) {
+                        result.textContent = '🎉 All matched! Great job!';
+                    }
+                } else {
+                    first.classList.remove('selected');
+                    result.textContent = '❌ Try again!';
+                    result.style.background = '#ffcdd2';
+                    result.style.color = '#c62828';
+                }
+                
+                matchingGame.selected = null;
+            }
+        }
+
+        // Update final score
+        function updateFinalScore() {
+            const finalScoreDiv = document.getElementById('finalScore');
+            const percentage = Math.round((score / 9) * 100);
+            let message = '';
+            
+            if (percentage >= 90) {
+                message = '🌟 Outstanding! Ready for interviews!';
+            } else if (percentage >= 70) {
+                message = '👍 Great! Review a few concepts.';
+            } else if (percentage >= 50) {
+                message = '📚 Good effort! Go through slides again.';
+            } else {
+                message = '💪 Keep practicing!';
+            }
+            
+            finalScoreDiv.innerHTML = `
+                <div style="font-size: 1.8em; margin: 15px 0;">${percentage}%</div>
+                <div>${message}</div>
+                <div style="margin-top: 10px;">Score: ${score} / 9 questions correct</div>
+            `;
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
